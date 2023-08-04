@@ -6,12 +6,14 @@ using SimpleJSON;
 using System.Web;
 using System.Net;
 using System;
+using System.Text;
+using System.Text.RegularExpressions;
 
 public class WebCamTextureToCloudVision : MonoBehaviour {
 
 	public string url = "https://vision.googleapis.com/v1/images:annotate?key=";
 	public string apiKey = "AIzaSyB2uoWjdfv6LxtOyvoTxRLCBV94STh7IjA"; //Put your google cloud vision api key here
-	public float captureIntervalSeconds = 2.0f;
+	public float captureIntervalSeconds = 1f;
 	public int requestedWidth = 640;
 	public int requestedHeight = 480;
 	public FeatureType featureType = FeatureType.TEXT_DETECTION;
@@ -59,6 +61,19 @@ public class WebCamTextureToCloudVision : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		Texture2D texture = new Texture2D(128, 128);
+        GetComponent<Renderer>().material.mainTexture = texture;
+
+        for (int y = 0; y < texture.height; y++)
+        {
+            for (int x = 0; x < texture.width; x++)
+            {
+                Color color = ((x & y) != 0 ? Color.white : Color.gray);
+                texture.SetPixel(x, y, color);
+            }
+        }
+        texture.Apply();
+
 		headers = new Dictionary<string, string>();
 		headers.Add("Content-Type", "application/json; charset=UTF-8");
 
@@ -85,19 +100,26 @@ public class WebCamTextureToCloudVision : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	// 	Mesh mesh = GetComponent<MeshFilter>().mesh;
-    //     Vector3[] vertices = mesh.vertices;
-    //     Vector3[] normals = mesh.normals;
-
-    //    for (var i = 0; i < vertices.Length; i++)
-    //     {
-    //         vertices[i] += normals[i] * Mathf.Sin(Time.time);
-    //     }
-
-    //    mesh.vertices = vertices;
+	
 	}
 
-	
+	// Setting the range of language detection to CJK.
+	private static readonly Regex cjkCharRegex = new Regex(@"\p{IsCJKUnifiedIdeographs}");
+	public static bool GetUnicodeString(char c){
+    	return cjkCharRegex.IsMatch(c.ToString());
+	}
+
+	// Detect whether the input contains pure/part Chinese characters or not.
+	public bool StringIterator(string s)
+	{
+		foreach (char c in s)
+		{
+			if(GetUnicodeString(c)){
+				return true;
+			}
+		}
+		return false;
+	}
 
 	public string translate(string input, string from, string to)
 			{
@@ -167,11 +189,11 @@ public class WebCamTextureToCloudVision : MonoBehaviour {
 						//Debug.Log(responses);
 						//Console.WriteLine(responses + "\n");
 						JSONNode res = JSON.Parse(responses);
-						//string fullTextPreTrans = res["responses"][0]["textAnnotations"][0]["description"].ToString().Trim('"');
-						string fullText = res["responses"][0]["textAnnotations"][0]["boundingPoly"].ToString().Trim('"');
+						string fullText = res["responses"][0]["textAnnotations"][0]["description"].ToString().Trim('"');
+						//string fullText = res["responses"][0]["textAnnotations"][0]["boundingPoly"].ToString().Trim('"');
 						if (fullText != ""){
 							//string fullText = translate(fullTextPreTrans, "zh-CN", "en");
-							Debug.Log("OCR Response: " + fullText);
+							// Debug.Log("OCR Response: " + fullText);
 							resPanel.SetActive(true);
 							responseText.text = fullText.Replace("\\n", " ");
 							fullText = fullText.Replace("\\n", ";");
@@ -182,6 +204,19 @@ public class WebCamTextureToCloudVision : MonoBehaviour {
 								if(i != texts.Length - 1)
 									responseArray.text += ", ";
 							}
+							StringBuilder stringBuilder = new StringBuilder();
+							for(int k=0; k<texts.Length; k++){
+								if(StringIterator(texts[k])){
+									stringBuilder.Append(texts[k]);
+									stringBuilder.Append(": ");
+									stringBuilder.Append(translate(texts[k], "zh-CN", "en"));
+									stringBuilder.Append(" | ");
+								}else{
+									stringBuilder.Append(texts[k]);
+									stringBuilder.Append(" | ");
+								}
+							}
+							Debug.Log(stringBuilder.ToString());
 						}
 					} else {
 						Debug.Log("Error: " + www.error);
