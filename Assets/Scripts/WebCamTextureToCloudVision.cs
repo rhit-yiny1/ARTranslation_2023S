@@ -19,8 +19,9 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 	public int requestedHeight = 480; //height and width of the captured picture
 	public FeatureType featureType = FeatureType.TEXT_DETECTION;
 	public int maxResults = 10;
-	public GameObject resPanel;
-	public Text responseText, responseArray;
+	//public GameObject resPanel;
+	//public Text responseText, responseArray;
+	public textScriptV1 textCreator;
 
 
 	WebCamTexture webcamTexture;
@@ -91,6 +92,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
+		
 		Texture2D texture = new Texture2D(128, 128);
 		GetComponent<Renderer>().material.mainTexture = texture;
 
@@ -229,7 +231,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 					if (string.IsNullOrEmpty(www.error))
 					{
 						string responses = www.text.Replace("\n", "").Replace(" ", "");
-						Debug.Log(responses);
+//						Debug.Log(responses);
 						//Console.WriteLine(responses + "\n");
 						JSONNode res = JSON.Parse(responses);
 						string fullText = res["responses"][0]["textAnnotations"][0]["description"].ToString().Trim('"');
@@ -242,12 +244,12 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 						{
 							//string fullText = translate(fullTextPreTrans, "zh-CN", "en");
 							//Debug.Log("OCR Response: " + fullText);
-							resPanel.SetActive(true);
-							responseText.text = fullText.Replace("\\n", " ");
+							//resPanel.SetActive(true);
+							//responseText.text = fullText.Replace("\\n", " ");
 							//Debug.Log("OCR Response: " + responseText.text);
 							fullText = fullText.Replace("\\n", ";");
 							string[] texts = fullText.Split(';');
-							responseArray.text = "";
+							//responseArray.text = "";
 
 							//以下新加入代码
 							List<TextLineInfo> textLineInfos = new List<TextLineInfo>(); // 创建一个空的List<TextLineInfo>，用于保存每个单词和边界框信息
@@ -293,6 +295,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 														}
 							*/
 							List<TextLineInfo> newTextLineInfos = new List<TextLineInfo>(); // 创建一个空的List<TextLineInfo>，用于保存每行文本和边界框信息
+							textCreator.ClearAllTextOnCanvas();
 							int aIndex = 0; // 字符串数组texts的下标
 							int bIndex = 0; // 字符串数组textLineInfos[].text的下标
 							while (aIndex < textLines.Length && bIndex < textLineInfos.Count)
@@ -348,31 +351,42 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 									}
 								}
 							}
+							if(textLineInfos.Count == 0){
+								textCreator.ClearAllTextOnCanvas();
+							}
 
-
-
-							/*
+							
+							//int counter = 0;
 							foreach (TextLineInfo lineInfo in newTextLineInfos)
 							{
-								Debug.Log("text: " + lineInfo.text);
-								Debug.Log("topLeft: " + lineInfo.topLeft);
-								Debug.Log("bottomLeft: " + lineInfo.bottomLeft);
-								Debug.Log("topRight: " + lineInfo.topRight);
-								Debug.Log("bottomRight: " + lineInfo.bottomRight);
-								Debug.Log("containsChinese: " + lineInfo.containsChinese);
-								Debug.Log("translatedText: " + lineInfo.translatedText);
+								float x = lineInfo.topLeft.x;
+								float y = lineInfo.topLeft.y;
+								if(lineInfo.topLeft.x > 0 && lineInfo.topLeft.y > 0){
+									x = lineInfo.topLeft.x - 160;
+									y = lineInfo.topLeft.y + 60;
+								}else if(lineInfo.topLeft.x > 0 && lineInfo.topLeft.y < 0){
+									x = lineInfo.topLeft.x - 160;
+									y = lineInfo.topLeft.y - 60;
+								}else if(lineInfo.topLeft.x < 0 && lineInfo.topLeft.y > 0){
+									x = lineInfo.topLeft.x + 160;
+									y = lineInfo.topLeft.y + 60;
+								}else if(lineInfo.topLeft.x < 0 && lineInfo.topLeft.y < 0){
+									x = lineInfo.topLeft.x + 160;
+									y = lineInfo.topLeft.y - 60;
+								}
+								textCreator.CreateTextOnCanvas(lineInfo.translatedText, x, -y+300);
+								//Debug.Log(counter + " " + "text: " + lineInfo.text + "topLeft: " + lineInfo.topLeft.x + " | " + "containsChinese: " + lineInfo.containsChinese + " | " + "translatedText: " + lineInfo.translatedText + "\n");
+								//counter++;
 							}
 
-							Debug.Log("length: " + newTextLineInfos.Count);
-*/
 							//新加入代码到此为止
 
-							for (int i = 0; i < texts.Length; i++)
-							{
-								responseArray.text += texts[i];
-								if (i != texts.Length - 1)
-									responseArray.text += ", ";
-							}
+							// for (int i = 0; i < texts.Length; i++)
+							// {
+							// 	responseArray.text += texts[i];
+							// 	if (i != texts.Length - 1)
+							// 		responseArray.text += ", ";
+							// }
 							StringBuilder stringBuilder = new StringBuilder();
 							for (int k = 0; k < texts.Length; k++)
 							{
@@ -389,7 +403,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 									stringBuilder.Append(" | ");
 								}
 							}
-							Debug.Log(stringBuilder.ToString());
+//							Debug.Log(stringBuilder.ToString());
 						}
 					}
 					else
