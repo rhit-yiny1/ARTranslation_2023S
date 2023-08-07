@@ -349,6 +349,7 @@ GameObject:
   - component: {fileID: 412903924}
   - component: {fileID: 412903922}
   - component: {fileID: 412903921}
+  - component: {fileID: 412903923}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -372,6 +373,28 @@ Behaviour:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 412903920}
   m_Enabled: 1
+--- !u!114 &412903923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 412903920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59e2b4076ad88451e8ee6cabe2ea05f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  url: https://vision.googleapis.com/v1/images:annotate?key=
+  apiKey: AIzaSyB2uoWjdfv6LxtOyvoTxRLCBV94STh7IjA
+  captureIntervalSeconds: 1
+  requestedWidth: 640
+  requestedHeight: 480
+  featureType: 5
+  maxResults: 10
+  resPanel: {fileID: 0}
+  responseText: {fileID: 0}
+  responseArray: {fileID: 0}
 --- !u!20 &412903924
 Camera:
   m_ObjectHideFlags: 0

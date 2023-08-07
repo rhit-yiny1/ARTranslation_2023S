@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
@@ -8,6 +8,7 @@ using System.Net;
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.IO;
 
 public class WebCamTextureToCloudVision : MonoBehaviour
 {
@@ -26,29 +27,6 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 	WebCamTexture webcamTexture;
 	Texture2D texture2D; //transformed pictures' data
 	Dictionary<string, string> headers; //storing HTTP headers
-
-	[System.Serializable] //新加入类
-	public class TextLineInfo
-	{
-		public string text;
-		public Vector2 topLeft;     // 左上角坐标
-		public Vector2 topRight;
-		public Vector2 bottomLeft;
-		public Vector2 bottomRight;
-		public bool containsChinese;
-		public string translatedText;
-
-		public TextLineInfo(string text, Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight)
-		{
-			this.text = text;
-			this.topLeft = topLeft;
-			this.topRight = topRight;
-			this.bottomLeft = bottomLeft;
-			this.bottomRight = bottomRight;
-			containsChinese = false;
-			translatedText = "";
-		}
-	}
 
 	[System.Serializable]
 	public class AnnotateImageRequests
@@ -233,140 +211,19 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 						//Console.WriteLine(responses + "\n");
 						JSONNode res = JSON.Parse(responses);
 						string fullText = res["responses"][0]["textAnnotations"][0]["description"].ToString().Trim('"');
-						//string bounding_Poly = res["responses"][0]["textAnnotations"][0]["boundingPoly"].ToString().Trim('"');
+						string fullText_boundingPoly = res["responses"][0]["textAnnotations"][0]["boundingPoly"].ToString().Trim('"');
 
-						//此行新加入
-						JSONArray textAnnotations = res["responses"][0]["textAnnotations"].AsArray;
 
 						if (fullText != "")
 						{
 							//string fullText = translate(fullTextPreTrans, "zh-CN", "en");
-							//Debug.Log("OCR Response: " + fullText);
+							Debug.Log("OCR Response: " + fullText);
+							Debug.Log("boundingPoly: " + fullText_boundingPoly);
 							resPanel.SetActive(true);
 							responseText.text = fullText.Replace("\\n", " ");
-							//Debug.Log("OCR Response: " + responseText.text);
 							fullText = fullText.Replace("\\n", ";");
 							string[] texts = fullText.Split(';');
 							responseArray.text = "";
-
-							//以下新加入代码
-							List<TextLineInfo> textLineInfos = new List<TextLineInfo>(); // 创建一个空的List<TextLineInfo>，用于保存每个单词和边界框信息
-
-							fullText = res["responses"][0]["textAnnotations"][0]["description"].ToString().Trim('"');
-							string[] textLines = fullText.Split(new string[] { "\\n" }, StringSplitOptions.None);
-
-
-
-							//Debug.Log("textAnnotation: " + textAnnotations.Count);
-							for (int i = 1; i < textAnnotations.Count; i++)
-							{
-								JSONNode textAnnotation = textAnnotations[i];
-								string text = textAnnotation["description"]; // 获取每行文本
-
-								// 获取每行文本的坐标信息
-								JSONNode boundingPolyNode = textAnnotation["boundingPoly"]["vertices"];
-								Vector2 topLeft = new Vector2(boundingPolyNode[0]["x"].AsFloat, boundingPolyNode[0]["y"].AsFloat);
-								Vector2 topRight = new Vector2(boundingPolyNode[1]["x"].AsFloat, boundingPolyNode[1]["y"].AsFloat);
-								Vector2 bottomLeft = new Vector2(boundingPolyNode[3]["x"].AsFloat, boundingPolyNode[3]["y"].AsFloat);
-								Vector2 bottomRight = new Vector2(boundingPolyNode[2]["x"].AsFloat, boundingPolyNode[2]["y"].AsFloat);
-
-								// 创建一个TextLineInfo对象，保存文本信息和坐标信息
-								TextLineInfo lineInfo = new TextLineInfo(text, topLeft, topRight, bottomLeft, bottomRight);
-								lineInfo.containsChinese = StringIterator(text);
-								if (lineInfo.containsChinese)
-								{
-									lineInfo.translatedText = translate(text, "zh-CN", "en");
-								}
-
-								textLineInfos.Add(lineInfo);
-							}
-							/*
-														foreach (TextLineInfo lineInfo in textLineInfos)
-														{
-															Debug.Log("text: " + lineInfo.text);
-														}
-														Debug.Log("count: " + textLineInfos.Count);
-
-														for (int i = 0; i < texts.Length; i++)
-														{
-															Debug.Log(texts[i]);
-														}
-							*/
-							List<TextLineInfo> newTextLineInfos = new List<TextLineInfo>(); // 创建一个空的List<TextLineInfo>，用于保存每行文本和边界框信息
-							int aIndex = 0; // 字符串数组texts的下标
-							int bIndex = 0; // 字符串数组textLineInfos[].text的下标
-							while (aIndex < textLines.Length && bIndex < textLineInfos.Count)
-							{
-								if (textLines[aIndex] == textLineInfos[bIndex].text)
-								{
-									// 字符串匹配，记录下标
-									//Debug.Log("Match found: A[" + aIndex + "] - B[" + bIndex + "]");
-
-									TextLineInfo lineInfo = new TextLineInfo(textLineInfos[bIndex].text, textLineInfos[bIndex].topLeft, textLineInfos[bIndex].topRight, textLineInfos[bIndex].bottomLeft, textLineInfos[bIndex].bottomRight);
-									lineInfo.containsChinese = textLineInfos[bIndex].containsChinese;
-									lineInfo.translatedText = textLineInfos[bIndex].translatedText;
-									newTextLineInfos.Add(lineInfo);
-
-									aIndex++;
-									bIndex++;
-								}
-								else
-								{
-									// 字符串不匹配，尝试合并B中的下一个字符串
-									string mergedString = textLineInfos[bIndex].text;
-									int tempBIndex = bIndex + 1;
-									int originIndex = bIndex;
-
-									while (tempBIndex < textLineInfos.Count)
-									{
-										mergedString += textLineInfos[tempBIndex].text;
-
-										if (textLines[aIndex] == mergedString)
-										{
-											// 合并后的字符串匹配，记录下标
-											//Debug.Log("Match found: A[" + aIndex + "] - B[" + bIndex + "," + tempBIndex + "]");
-											TextLineInfo lineInfo = new TextLineInfo(mergedString, textLineInfos[originIndex].topLeft, textLineInfos[tempBIndex].topRight, textLineInfos[originIndex].bottomLeft, textLineInfos[tempBIndex].bottomRight);
-											lineInfo.containsChinese = StringIterator(mergedString);
-											if (lineInfo.containsChinese)
-											{
-												lineInfo.translatedText = translate(mergedString, "zh-CN", "en");
-											}
-											newTextLineInfos.Add(lineInfo);
-											aIndex++;
-											bIndex = tempBIndex + 1;
-											break;
-										}
-
-										tempBIndex++;
-									}
-
-									if (tempBIndex == textLineInfos.Count)
-									{
-										Debug.Log("Failed to match A[" + aIndex + "]");
-										aIndex++;
-										bIndex = bIndex + 1;
-									}
-								}
-							}
-
-
-
-							/*
-							foreach (TextLineInfo lineInfo in newTextLineInfos)
-							{
-								Debug.Log("text: " + lineInfo.text);
-								Debug.Log("topLeft: " + lineInfo.topLeft);
-								Debug.Log("bottomLeft: " + lineInfo.bottomLeft);
-								Debug.Log("topRight: " + lineInfo.topRight);
-								Debug.Log("bottomRight: " + lineInfo.bottomRight);
-								Debug.Log("containsChinese: " + lineInfo.containsChinese);
-								Debug.Log("translatedText: " + lineInfo.translatedText);
-							}
-
-							Debug.Log("length: " + newTextLineInfos.Count);
-*/
-							//新加入代码到此为止
-
 							for (int i = 0; i < texts.Length; i++)
 							{
 								responseArray.text += texts[i];
