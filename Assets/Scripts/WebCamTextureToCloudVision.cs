@@ -92,7 +92,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-		
+		Debug.Log("From: " + menuScript.fromLanguage + " " + "To: " + menuScript.toLanguage);
 		Texture2D texture = new Texture2D(128, 128);
 		GetComponent<Renderer>().material.mainTexture = texture;
 
@@ -242,16 +242,8 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 
 						if (fullText != "")
 						{
-							//string fullText = translate(fullTextPreTrans, "zh-CN", "en");
-							//Debug.Log("OCR Response: " + fullText);
-							//resPanel.SetActive(true);
-							//responseText.text = fullText.Replace("\\n", " ");
-							//Debug.Log("OCR Response: " + responseText.text);
 							fullText = fullText.Replace("\\n", ";");
 							string[] texts = fullText.Split(';');
-							//responseArray.text = "";
-
-							//以下新加入代码
 							List<TextLineInfo> textLineInfos = new List<TextLineInfo>(); // 创建一个空的List<TextLineInfo>，用于保存每个单词和边界框信息
 
 							fullText = res["responses"][0]["textAnnotations"][0]["description"].ToString().Trim('"');
@@ -277,23 +269,11 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 								lineInfo.containsChinese = StringIterator(text);
 								if (lineInfo.containsChinese)
 								{
-									lineInfo.translatedText = translate(text, "zh-CN", "en");
+									lineInfo.translatedText = translate(text, InputFieldScript.inputText, OutputFieldScript.inputText);
 								}
 
 								textLineInfos.Add(lineInfo);
 							}
-							/*
-														foreach (TextLineInfo lineInfo in textLineInfos)
-														{
-															Debug.Log("text: " + lineInfo.text);
-														}
-														Debug.Log("count: " + textLineInfos.Count);
-
-														for (int i = 0; i < texts.Length; i++)
-														{
-															Debug.Log(texts[i]);
-														}
-							*/
 							List<TextLineInfo> newTextLineInfos = new List<TextLineInfo>(); // 创建一个空的List<TextLineInfo>，用于保存每行文本和边界框信息
 							textCreator.ClearAllTextOnCanvas();
 							int aIndex = 0; // 字符串数组texts的下标
@@ -332,7 +312,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 											lineInfo.containsChinese = StringIterator(mergedString);
 											if (lineInfo.containsChinese)
 											{
-												lineInfo.translatedText = translate(mergedString, "zh-CN", "en");
+												lineInfo.translatedText = translate(mergedString, InputFieldScript.inputText, OutputFieldScript.inputText);
 											}
 											newTextLineInfos.Add(lineInfo);
 											aIndex++;
@@ -355,8 +335,6 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 								textCreator.ClearAllTextOnCanvas();
 							}
 
-							
-							//int counter = 0;
 							foreach (TextLineInfo lineInfo in newTextLineInfos)
 							{
 								float x = lineInfo.topLeft.x;
@@ -378,15 +356,6 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 								//Debug.Log(counter + " " + "text: " + lineInfo.text + "topLeft: " + lineInfo.topLeft.x + " | " + "containsChinese: " + lineInfo.containsChinese + " | " + "translatedText: " + lineInfo.translatedText + "\n");
 								//counter++;
 							}
-
-							//新加入代码到此为止
-
-							// for (int i = 0; i < texts.Length; i++)
-							// {
-							// 	responseArray.text += texts[i];
-							// 	if (i != texts.Length - 1)
-							// 		responseArray.text += ", ";
-							// }
 							StringBuilder stringBuilder = new StringBuilder();
 							for (int k = 0; k < texts.Length; k++)
 							{
@@ -394,7 +363,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 								{
 									stringBuilder.Append(texts[k]);
 									stringBuilder.Append(": ");
-									stringBuilder.Append(translate(texts[k], "zh-CN", "en"));
+									stringBuilder.Append(translate(texts[k], InputFieldScript.inputText, OutputFieldScript.inputText));
 									stringBuilder.Append(" | ");
 								}
 								else

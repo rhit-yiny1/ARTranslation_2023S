@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Menu.unity
+    guid: 4c4bbde2a8afc6d499e36aa04b24940d
+  - enabled: 1
     path: Assets/Scenes/GoogleVisionApiOCRDemo.unity
     guid: 8821e3e7177aa4e72bee16269302fcb7
   m_configObjects: {}
