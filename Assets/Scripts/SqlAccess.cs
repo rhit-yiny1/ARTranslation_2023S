@@ -94,6 +94,41 @@ public class SqlAccess
 	    Debug.Log(query.ToString());
 	    return ExecuteQuery(query.ToString());
 	}
+
+    public void InsertWhere(string tableName, string[] columns, string[] values)
+    {
+        if (columns.Length != values.Length)
+            throw new Exception("columns.Length != values.Length");
+
+        StringBuilder query = new StringBuilder();
+        query.Append("INSERT INTO ");
+        query.Append(tableName);
+        query.Append(" (");
+
+        for (int i = 0; i < columns.Length; i++)
+        {
+            query.Append(columns[i]);
+            if (i != columns.Length - 1)
+                query.Append(", ");
+        }
+
+        query.Append(") VALUES (");
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            query.Append("'");
+            query.Append(values[i]);
+            query.Append("'");
+            if (i != values.Length - 1)
+                query.Append(", ");
+        }
+
+        query.Append(")");
+
+        Debug.Log(query.ToString());
+        ExecuteNonQuery(query.ToString());
+    }
+
 	
 	/// <summary>
 	/// 执行sql语句
@@ -121,4 +156,21 @@ public class SqlAccess
 	    }
 	    return null;
 	}
+
+    public static void ExecuteNonQuery(string sqlString)
+    {
+        if (dbConnection.State == ConnectionState.Open)
+        {
+            try
+            {
+                MySqlCommand command = new MySqlCommand(sqlString, dbConnection);
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ee)
+            {
+                throw new Exception("SQL:" + sqlString + "/n" + ee.Message.ToString());
+            }
+        }
+    }
+
 }

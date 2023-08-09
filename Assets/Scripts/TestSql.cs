@@ -6,12 +6,15 @@ public class TestSql : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        DataSet ds = null;
         SqlAccess sql = new SqlAccess();
         string[] items = { "id", "bless", "state", "time", "name", "banji" };
         string[] col = { };
         string[] op = { };
-        string[] val = { };
-        DataSet ds = sql.SelectWhere("blessings", items, col, op, val);
+        string[] val = { "testInsert", "testInsertName" };
+        string[] columns = { "bless", "name" };
+        //DataSet ds = sql.SelectWhere("blessings", items, col, op, val);
+        sql.InsertWhere("blessings", columns, val);
 
         if(ds != null)
         {
