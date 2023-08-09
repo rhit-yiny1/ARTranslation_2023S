@@ -135,10 +135,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 	}
 
 	// Update is called once per frame
-	void Update()
-	{
-
-	}
+	void Update(){}
 
 	// Setting the range of language detection to CJK.
 	private static readonly Regex cjkCharRegex = new Regex(@"\p{IsCJKUnifiedIdeographs}");
@@ -147,8 +144,8 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 		return cjkCharRegex.IsMatch(c.ToString());
 	}
 
-	// Detect whether the input contains pure/part Chinese characters or not.
-	public bool StringIterator(string s)
+	// Detect whether the input contains pure/part CJK characters or not.
+	public bool containsCJK(string s)
 	{
 		foreach (char c in s)
 		{
@@ -231,11 +228,8 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 					if (string.IsNullOrEmpty(www.error))
 					{
 						string responses = www.text.Replace("\n", "").Replace(" ", "");
-//						Debug.Log(responses);
-						//Console.WriteLine(responses + "\n");
 						JSONNode res = JSON.Parse(responses);
 						string fullText = res["responses"][0]["textAnnotations"][0]["description"].ToString().Trim('"');
-						//string bounding_Poly = res["responses"][0]["textAnnotations"][0]["boundingPoly"].ToString().Trim('"');
 
 						//此行新加入
 						JSONArray textAnnotations = res["responses"][0]["textAnnotations"].AsArray;
@@ -249,9 +243,6 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 							fullText = res["responses"][0]["textAnnotations"][0]["description"].ToString().Trim('"');
 							string[] textLines = fullText.Split(new string[] { "\\n" }, StringSplitOptions.None);
 
-
-
-							//Debug.Log("textAnnotation: " + textAnnotations.Count);
 							for (int i = 1; i < textAnnotations.Count; i++)
 							{
 								JSONNode textAnnotation = textAnnotations[i];
@@ -266,7 +257,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 
 								// 创建一个TextLineInfo对象，保存文本信息和坐标信息
 								TextLineInfo lineInfo = new TextLineInfo(text, topLeft, topRight, bottomLeft, bottomRight);
-								lineInfo.containsChinese = StringIterator(text);
+								lineInfo.containsChinese = containsCJK(text);
 								if (lineInfo.containsChinese)
 								{
 									lineInfo.translatedText = translate(text, InputFieldScript.inputText, OutputFieldScript.inputText);
@@ -283,8 +274,6 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 								if (textLines[aIndex] == textLineInfos[bIndex].text)
 								{
 									// 字符串匹配，记录下标
-									//Debug.Log("Match found: A[" + aIndex + "] - B[" + bIndex + "]");
-
 									TextLineInfo lineInfo = new TextLineInfo(textLineInfos[bIndex].text, textLineInfos[bIndex].topLeft, textLineInfos[bIndex].topRight, textLineInfos[bIndex].bottomLeft, textLineInfos[bIndex].bottomRight);
 									lineInfo.containsChinese = textLineInfos[bIndex].containsChinese;
 									lineInfo.translatedText = textLineInfos[bIndex].translatedText;
@@ -307,9 +296,8 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 										if (textLines[aIndex] == mergedString)
 										{
 											// 合并后的字符串匹配，记录下标
-											//Debug.Log("Match found: A[" + aIndex + "] - B[" + bIndex + "," + tempBIndex + "]");
 											TextLineInfo lineInfo = new TextLineInfo(mergedString, textLineInfos[originIndex].topLeft, textLineInfos[tempBIndex].topRight, textLineInfos[originIndex].bottomLeft, textLineInfos[tempBIndex].bottomRight);
-											lineInfo.containsChinese = StringIterator(mergedString);
+											lineInfo.containsChinese = containsCJK(mergedString);
 											if (lineInfo.containsChinese)
 											{
 												lineInfo.translatedText = translate(mergedString, InputFieldScript.inputText, OutputFieldScript.inputText);
@@ -353,26 +341,7 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 									y = lineInfo.topLeft.y - 60;
 								}
 								textCreator.CreateTextOnCanvas(lineInfo.translatedText, x, -y+300);
-								//Debug.Log(counter + " " + "text: " + lineInfo.text + "topLeft: " + lineInfo.topLeft.x + " | " + "containsChinese: " + lineInfo.containsChinese + " | " + "translatedText: " + lineInfo.translatedText + "\n");
-								//counter++;
 							}
-							StringBuilder stringBuilder = new StringBuilder();
-							for (int k = 0; k < texts.Length; k++)
-							{
-								if (StringIterator(texts[k]))
-								{
-									stringBuilder.Append(texts[k]);
-									stringBuilder.Append(": ");
-									stringBuilder.Append(translate(texts[k], InputFieldScript.inputText, OutputFieldScript.inputText));
-									stringBuilder.Append(" | ");
-								}
-								else
-								{
-									stringBuilder.Append(texts[k]);
-									stringBuilder.Append(" | ");
-								}
-							}
-//							Debug.Log(stringBuilder.ToString());
 						}
 					}
 					else
