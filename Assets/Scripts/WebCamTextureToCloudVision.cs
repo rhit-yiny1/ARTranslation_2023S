@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using UnityEngine.UI;
 using SimpleJSON;
 using System.Web;
@@ -23,6 +24,13 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 	//public Text responseText, responseArray;
 	public textScriptV1 textCreator;
 
+	public DataSet ds = null;
+	public SqlAccess sql = new SqlAccess();
+	public string[] items = { "id", "source", "target", "original", "translation", "time" };
+	public string[] columns = { "source", "target", "original", "translation" };
+	public string[] val = { "zh-CN", "en", "测试运行", "testrun" };
+	public string[] testVal = { "zh-CN", "en", "测试运行", "testrun"};
+	
 
 	WebCamTexture webcamTexture;
 	Texture2D texture2D; //transformed pictures' data
@@ -171,11 +179,14 @@ public class WebCamTextureToCloudVision : MonoBehaviour
 		{
 			result = result.Substring(4, result.IndexOf("\"", 4
 				, StringComparison.Ordinal) - 4);
+			
+			string[] val = { fromLanguage, toLanguage, input, result };
+			sql.InsertWhere("history", columns, val);
 			return result;
 		}
 		catch (Exception e1)
 		{
-			return "error";
+			return "error" + e1;
 		}
 	}
 
