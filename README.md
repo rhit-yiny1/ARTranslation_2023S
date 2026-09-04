@@ -1,14 +1,24 @@
-# ARTranslation_2023S
-A translation tool based on Google Cloud Vision API in Unity.
+AR Translation
 
-The code base is largely based on this demo project here: https://github.com/codemaker2015/google-cloud-vision-api-ocr-unity3d-demo.
+A Unity/C# augmented-reality prototype for real-time camera text translation. The application captures camera input, uses Google Cloud Vision for text recognition, processes CJK text, translates detected content, and displays translated text within the Unity scene.
 
-The project takes from the camera and recognizes the potential texts based on a pre-trained ML model provided by Google Cloud Vision. It is then able to identify all the CJK (Chinese, Japanese, Korean) characters and consider words that have them as one CJK word. The word is then transferred to Google Translate Api and return a JSON response. 
+Demo
 
-TO USE:
-You need to have a Unity Editor with version 2019.4.17f1 to run the application without potential crashes. It is recommended that you get it from Unity's Official Website. 
-Clone and current repo and put it in a local file location. Open the cloned folder with Unity Hub Editor 2019.4.17f1 to run the application. 
+[embed demo1.gif here]
 
-At the moment, the application is only able to identify and translate CJK words and characters due to the fact that the initial goal of the application was to only translate CJK words and characters but it is possible to modify the scripts so that all languages can be identified and translated. 
+Project Contributions
 
-A warm thanks to the dev team. 
+Built as a three-person research project at Shanghai Jiao Tong University. We extended an existing Google Cloud Vision Unity OCR demo with CJK-aware text processing, translation workflows, AR text placement/UI, persistence, and application-level integration.
+
+Technologies
+
+Unity · C# · Google Cloud Vision · Google Translate · MySQL
+
+Publication
+
+Augmented Reality Text Translation: A Unity-Based Real-Time Approach — June 2024
+DOI: 10.61173/60910s92
+
+Attribution
+
+Initial Cloud Vision OCR integration was based on the open-source Unity demo linked below. This repository contains the research team's extensions and application implementation.
